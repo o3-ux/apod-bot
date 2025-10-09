@@ -30,4 +30,5 @@ on:
                                                                                                                                         git add .
                                                                                                                                                   git commit -m "Add APOD for $(date +'%Y-%m-%d')" || echo "No changes to commit"
                                                                                                                                                             git push
-# noop
+                                                                                                                                                            
+                                                                                                                                                            # noop

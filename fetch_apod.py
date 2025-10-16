@@ -53,7 +53,11 @@ def main(argv=None):
         sys.exit("Provide NASA API key with --api-key or APOD_API_KEY env var")
     date = args.date or _dt.date.today().isoformat()
 
-    meta = fetch_apod(key, date)
+    try:
+        meta = fetch_apod(key, date)
+    except requests.exceptions.RequestException as exc:
+        print(f"Failed to fetch APOD metadata: {exc}", file=sys.stderr)
+        sys.exit(0)
 
     out_dir = pathlib.Path(args.out_dir) / date
     out_dir.mkdir(parents=True, exist_ok=True)

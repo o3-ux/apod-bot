@@ -5,17 +5,31 @@ import requests, urllib.request, shutil
 API_URL = "https://api.nasa.gov/planetary/apod"
 
 def fetch_apod(api_key: str, date: str | None = None, *, retries: int = 3, timeout: int = 120):
-    """Return APOD metadata dict with retries and generous timeout."""
+    """Return APOD metadata dict.
+
+    Retries network timeouts, connection errors, and HTTP 5xx responses.
+    Back-off schedule: 5 → 10 → 20 s (for default 3 attempts).
+    """
     params = {"api_key": api_key}
     if date:
         params["date"] = date
+
     last_exc: Exception | None = None
     for attempt in range(1, retries + 1):
         try:
             r = requests.get(API_URL, params=params, timeout=timeout)
+            # Consider 5xx a transient error worth retrying.
+            if 500 <= r.status_code < 600:
+                raise requests.exceptions.HTTPError(
+                    f"{r.status_code} Server Error", response=r
+                )
             r.raise_for_status()
             return r.json()
-        except (requests.exceptions.Timeout, requests.exceptions.ConnectionError) as exc:
+        except (
+            requests.exceptions.Timeout,
+            requests.exceptions.ConnectionError,
+            requests.exceptions.HTTPError,
+        ) as exc:
             last_exc = exc
             if attempt < retries:
                 backoff = 5 * 2 ** (attempt - 1)
@@ -26,6 +40,7 @@ def fetch_apod(api_key: str, date: str | None = None, *, retries: int = 3, timeo
                 time.sleep(backoff)
             else:
                 raise last_exc
+
 
 def main(argv=None):
     p = argparse.ArgumentParser()
@@ -49,6 +64,7 @@ def main(argv=None):
     with urllib.request.urlopen(img_url) as resp, open(out_dir / img_name, "wb") as f:
         shutil.copyfileobj(resp, f)
     print(f"Saved APOD {date} to {out_dir}")
+
 
 if __name__ == "__main__":
     main()

@@ -2,33 +2,31 @@ name: Daily APOD Fetch
 
 on:
   schedule:
-      - cron: '0 16 * * *'  # 09:00 PT / 16:00 UTC
-        workflow_dispatch:
+    - cron: '0 16 * * *'  # 09:00 PT / 16:00 UTC
+  workflow_dispatch:
 
-        jobs:
-          fetch-and-commit:
-              runs-on: ubuntu-latest
-                    steps:
-                        - name: Checkout repo
-                                uses: actions/checkout@v4
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-                                      - name: Set up Python
-                                              uses: actions/setup-python@v4
-                                                      with:
-                                                                python-version: '3.x'
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
-                                                                      - name: Install dependencies
-                                                                              run: pip install -r requirements.txt
+      - name: Install dependencies
+        run: pip install -r requirements.txt
 
-                                                                                    - name: Run script
-                                                                                            run: python fetch_apod.py
+      - name: Run script
+        run: python fetch_apod.py
 
-                                                                                                  - name: Commit and push
-                                                                                                          run: |
-                                                                                                                    git config user.name "apod-bot"
-                                                                                                                              git config user.email "bot@example.com"
-                                                                                                                                        git add .
-                                                                                                                                                  git commit -m "Add APOD for $(date +'%Y-%m-%d')" || echo "No changes to commit"
-                                                                                                                                                            git push
-                                                                                                                                                            
-                                                                                                                                                            # noop
+      - name: Commit and push
+        run: |
+          git config user.name "apod-bot"
+          git config user.email "bot@example.com"
+          git add .
+          git commit -m "Add APOD for $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
